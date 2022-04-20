@@ -1,5 +1,6 @@
 import './App.css';
 import React, {useEffect, useState} from 'react';
+import axios from "axios";
 
 function App() {
 const CLIENT_ID = "d41293552cb84b3d8839d461cf491f65"
@@ -8,6 +9,8 @@ const AUTH_ENDPOINT = "https://accounts.spotify.com/authorize"
 const RESPONSE_TYPE = "token"
 
 const[token, setToken] = useState("")
+const [searchKey, setSearchKey] = useState("")
+const [artists, setArtists] = useState([])
 
 useEffect(() => {
   const hash = window.location.hash
@@ -29,6 +32,30 @@ const logout = () => {
   window.localStorage.removeItem("token")
 }
 
+const searchArtists = async (e) => {
+  e.preventDefault()
+  const {data} = await axios.get("https://api.spotify.com/v1/search", {
+      headers: {
+          Authorization: `Bearer ${token}`
+      },
+      params: {
+          q: searchKey,
+          type: "artist"
+      }
+  })
+
+  setArtists(data.artists.items)
+}
+
+const renderArtists = () => {
+  return artists.map(artist => (
+      <div key={artist.id}>
+          {artist.images.length ? <img width={"100%"} src={artist.images[0].url} alt=""/> : <div>No Image</div>}
+          {artist.name}
+      </div>
+  ))
+}
+
 
   return (
     <div className="App">
@@ -41,6 +68,13 @@ const logout = () => {
             }
     
       </header>
+
+      <form onSubmit={searchArtists}>
+        <input type="text" onChange={e => setSearchKey(e.target.value)}/>
+        <button type={"submit"}>Search</button>
+      </form>
+
+      {renderArtists()}
 
     </div>
   );
